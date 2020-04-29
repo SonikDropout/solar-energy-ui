@@ -150,6 +150,9 @@
 </div>
 
 <style>
+  .layout {
+    background: url('../../app/background.svg') no-repeat;
+  }
   main {
     display: grid;
     grid-template-columns: repeat(12, 1fr);
