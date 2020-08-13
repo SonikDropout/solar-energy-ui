@@ -11,54 +11,28 @@
   import { onMount } from 'svelte';
   import { serialData } from '../stores';
   import { CONNECTION_TYPES, COMMANDS } from '../constants';
+  import Version from '../atoms/Version';
 
   onMount(() => {
     chart = new Chart(
       document.getElementById('chart').getContext('2d'),
-      configureChart(points, { x: 'I, A', y: 'U, В' })
+      configureChart([], { x: 'I, A', y: 'U, В' })
     );
     chart.options.onClick = chart.resetZoom;
   });
 
-  const typeOptions = [
-    { name: 'polycrystalline', label: 'монокристаллическая', value: 0 },
-    { name: 'monocrystalline', label: 'поликристаллическая', value: 1 },
-    { name: 'amorphous', label: 'аморфная', value: 2 },
-  ];
-
-  const distanceOptions = [
-    { label: '300', value: 0 },
-    { label: '450', value: 1 },
-    { label: '600', value: 2 },
-  ];
-
-  let points = [],
+  let rows = [],
     saveDisabled = true,
     isDrawing,
     unsubscribeData,
-    selectedDistance = distanceOptions[0],
-    selectedType = typeOptions[0],
     chart,
     timeStart = 0;
-
-  function setDistance(e) {
-    selectedDistance = distanceOptions[e.target.value];
-  }
-  function setType(i) {
-    selectedType = typeOptions[i];
-  }
-  function switchLoadMode(e) {
-    ipcRenderer.send(
-      'serialCommand',
-      COMMANDS[e.target.checked ? 'turnOnExternalLoad' : 'turnOffExternalLoad']
-    );
-  }
 
   function toggleDrawing() {
     if (isDrawing) {
       unsubscribeData();
-      stopDrawing();
     } else {
+      clearChart();
       startLogging();
       subscribeData();
     }
@@ -66,61 +40,46 @@
   }
 
   function startLogging() {
-    const fileName = `Solar-${selectedType.name}`;
-    const headers = [];
+    const headers = ['t, c', 'U,B', 'I, A'];
     saveDisabled = false;
-    ipcRenderer.send('startFileWrite', 'Solar', headers);
+    ipcRenderer.send('startLog', headers);
   }
 
-  function stopDrawing() {
-    isDrawing = false;
+  function clearChart() {
     timeStart = 0;
-    points = [];
+    rows = [];
+    chart.data.datasets[0].data = [];
   }
 
   function subscribeData() {
-    timeStart = Date.now();
+    ipcRenderer.send('serialCommand', COMMANDS.getIVC);
     unsubscribeData = serialData.subscribe(addPoint);
   }
 
   function addPoint(iv) {
-    points.push([timeStart++, iv.voltage, iv.current]);
-    updateChart();
+    const row = [timeStart++, iv.voltage, iv.current];
+    row.push(row);
+    addToChart(row);
+    sendToLogger(row);
   }
 
-  function updateChart() {
-    chart.data.datasets[0].data = points
-      .map(row => ({
-        x: row[xAxis.value],
-        y: row[yAxis.value],
-      }))
-      .sort((p1, p2) => p1.x - p2.x);
+  function addToChart(row) {
+    chart.data.datasets[0].data.push({ x: row[2], y: row[1] });
+    chart.data.datasets[0].data.sort((p1, p2) => p1.x - p2.x);
     chart.update();
   }
 
   function sendToLogger(row) {
-    ipcRenderer.send('excelRow', row);
+    ipcRenderer.send('logRow', row);
   }
 </script>
 
 <div class="layout">
+  <Version />
   <header>
     Изучение технических характеристик солнечных панелей различного типа
   </header>
   <main>
-    <div class="label">Тип солнечной панели</div>
-    <Select
-      options={typeOptions}
-      defaultValue={selectedType.value}
-      style="grid-column: 1 / 5"
-      onChange={setType} />
-    <div class="label">Расстояние до источника света, мм</div>
-    <RadioGroup
-    value={selectedDistance.value}
-      style="grid-column: 1 / 5"
-      options={distanceOptions}
-      name="distance"
-      onChange={setDistance} />
     <div class="short-label">U, В</div>
     <div class="value">{$serialData.voltage}</div>
     <div class="short-label">I, A</div>
@@ -133,14 +92,8 @@
       , А
     </div>
     <div class="value">{$serialData.loadCurrent}</div>
-    <Toggle
-      name="external"
-      style="grid-area: 8 / 3 / 9 / 6"
-      on:change={switchLoadMode}>
-      Внеш нагр
-    </Toggle>
     <div class="chart">
-      <canvas id="chart" height="400" width="520" />
+      <canvas id="chart" height="160" />
     </div>
   </main>
   <footer>
@@ -161,16 +114,14 @@
     grid-row-gap: 8px;
     align-items: center;
     padding: 0 24px;
+    font-size: 2rem;
   }
   .chart {
-    grid-area: 1 / 6 / 11 / 13;
+    grid-area: 1 / 3 / 11 / 13;
   }
   footer {
     justify-content: space-between;
     padding: 0 24px;
-  }
-  .label {
-    grid-column: 1 / 5;
   }
   .short-label {
     grid-column: 1 / 2;
