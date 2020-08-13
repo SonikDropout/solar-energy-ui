@@ -43,23 +43,25 @@ function initPeripherals(win) {
   serial
     .on('data', (d) => win.webContents.send('serialData', d))
     .once('data', (d) => (initialData = d));
-  ipcMain.on('startFileWrite', (_, ...args) => logger.createFile(...args));
-  ipcMain.on('excelRow', (_, ...args) => logger.writeRow(...args));
-  ipcMain.on('serialCommand', (_, ...args) => serial.sendCommand(...args));
-  ipcMain.on('saveFile', () => {
-    logger.saveFile(usbPath, (...args) =>
-      win.webContents.send('fileSaved', ...args)
-    );
-  });
-  ipcMain.on('usbStorageRequest', usbPort.init);
-  ipcMain.on('initialDataRequest', (e) => (e.returnValue = initialData));
-  ipcMain.on('EjectUSB', usbPort.eject);
+  listenRenderer();
   return {
     removeAllListeners() {
       usbPort.removeAllListeners();
       serial.close();
     },
   };
+}
+
+function listenRenderer() {
+  ipcMain.on('saveFile', (e) =>
+    logger.saveFile(usbPath, e.reply.bind(e, 'fileSaved'))
+  );
+  ipcMain.on('logRow', (e, row) => logger.writeRow(row));
+  ipcMain.on('startLog', (e, headers) => logger.createFile(headers));
+  ipcMain.on('serialCommand', (_, ...args) => serial.sendCommand(...args));
+  ipcMain.on('usbStorageRequest', usbPort.init);
+  ipcMain.on('initialDataRequest', (e) => (e.returnValue = initialData));
+  ipcMain.on('EjectUSB', usbPort.eject);
 }
 
 function launch() {

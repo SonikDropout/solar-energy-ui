@@ -1,75 +1,46 @@
-const { Workbook } = require('excel4node');
+const fs = require('fs');
+const homedir = require('os').homedir();
 const path = require('path');
 
-let wb,
-  ws,
-  fileName,
-  headerStyle,
-  dataStyle,
-  row = 1;
-
-function createFile(name, headers) {
-  fileName = name;
-  wb = new Workbook();
-  ws = wb.addWorksheet('Результаты');
-  if (!headerStyle) createStyles();
-  for (let i = 0; i < headers.length; i++) {
-    ws.cell(row, i + 1)
-      .string(headers[i])
-      .style(headerStyle);
-  }
-  row++;
-}
-
-function writeRow(entries) {
-  for (let i = 0; i < entries.length; i++) {
-    ws.cell(row, i + 1)
-      .number(entries[i])
-      .style(dataStyle);
-  }
-  row++;
-}
-
-function saveFile(dir, cb = () => {}) {
-  wb.write(path.join(dir, fileName), cb);
-}
-
-function createStyles() {
-  headerStyle = wb.createStyle({
-    font: {
-      bold: true,
-      color: 'ffffff',
-    },
-    fill: {
-      type: 'pattern',
-      patternType: 'solid',
-      fgColor: '8bc041',
-    },
-  });
-  headerStyle.border = generateBorders();
-  dataStyle = wb.createStyle({
-    alignment: {
-      horizontal: 'right',
-    },
-  });
-  dataStyle.border = generateBorders();
-}
-
-function generateBorders() {
-  return ['left', 'right', 'top', 'bottom'].reduce(
-    (acc, key) => {
-      acc[key] = {
-        style: 'thin',
-        color: 'black',
-      };
-      return acc;
-    },
-    { outline: false }
-  );
-}
-
 module.exports = {
-  writeRow,
-  createFile,
-  saveFile,
+  logsDir: path.join(homedir, 'solar-energy-ui', 'logs'),
+  fileName: 'SolarEnergy.tsv',
+  async createFile(headers) {
+    if (this.ws) this.clear();
+    await this._createDir();
+    this.fileName = `SolarEnergy_${await this._getFileID()}.tsv`;
+    this.filePath = path.join(this.logsDir, this.fileName);
+    this.ws = fs.createWriteStream(this.filePath);
+    this.ws.write(headers.concat('\n').join('\t'), 'ascii');
+  },
+  writeRow(row) {
+    if (!this.ws) return;
+    this.ws.write(row.concat('\n').join('\t'), 'ascii');
+  },
+  saveFile(dir, cb) {
+    fs.copyFile(this.filePath, path.join(dir, this.fileName), (err) => {
+      if (err) {
+        console.error(err);
+        cb(err);
+      } else {
+        console.info('Log was written to', this.fileName);
+        cb();
+      }
+    });
+  },
+  clear() {
+    this.ws.end();
+    this.ws = null;
+  },
+  async _getFileID() {
+    const logs = await fs.promises.readdir(this.logsDir);
+    return logs.reduce((id, fn) => Math.max(+fn.match(/\d+/)[0], id), 0) + 1;
+  },
+  async _createDir() {
+    try {
+      await fs.promises.access(this.logsDir);
+    } catch {
+      await fs.promises.mkdir(this.logsDir, { recursive: true });
+    }
+  },
 };
