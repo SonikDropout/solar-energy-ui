@@ -5,16 +5,15 @@ const PORT = {
 };
 
 const SEPARATORS = Buffer.alloc(4);
-SEPARATORS.writeUInt16BE(18735);
-SEPARATORS.writeUInt16BE(869, 2);
+SEPARATORS.writeUInt16BE(1573);
+SEPARATORS.writeUInt16BE(2605, 2);
 
-const SERIAL_DATA = ['voltage', 'current', 'loadCurrent', 'loadMode'];
+const SERIAL_DATA = ['voltage', 'current', 'loadCurrent'];
 
 const DATA_BYTE_LENGTH = SERIAL_DATA.length * 2 + SEPARATORS.length;
 
 const COMMANDS = {
-  turnOnExternalLoad: 4,
-  turnOffExternalLoad: 8,
+  getIVC: [4, 0],
 };
 
 module.exports = {

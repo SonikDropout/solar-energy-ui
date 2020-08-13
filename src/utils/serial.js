@@ -31,7 +31,7 @@ let commandQueue = [];
 let portBusy = false;
 
 function sendCommand([byte1, byte2]) {
-  commandQueue.push(Buffer.from([45, byte1, byte2, byte1 + byte2 + 45]));
+  commandQueue.push(Buffer.from([33, byte1, byte2, byte1 + byte2 + 33]));
   if (!portBusy) {
     portBusy = true;
     writeCommandFromQueue();

@@ -12,8 +12,8 @@ function randomData() {
   return Array(SERIAL_DATA.length).fill(0);
 }
 
-serial.sendCommand = function sendCommand(cmd) {
-  console.info('Sending command to serial:', Buffer.from([38, cmd, 38 + cmd]));
+serial.sendCommand = function sendCommand([byte1, byte2]) {
+  console.info('Sending command to serial:', Buffer.from([33, byte1, byte2, 33 + byte1 + byte2]));
 };
 
 serial.close = () => clearInterval(interval);
