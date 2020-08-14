@@ -5,6 +5,7 @@ const logger = require('./src/utils/logger');
 const usbPort = require('./src/utils/usbPort');
 const { IS_RPI: isPi, SERIAL_DATA } = require('./src/constants');
 const { app, BrowserWindow, ipcMain } = electron;
+const serial = require(`./src/utils/serial${isPi ? '' : '.mock'}`);
 
 let win,
   usbPath,
@@ -30,7 +31,6 @@ function reloadOnChange(win) {
 }
 
 function initPeripherals(win) {
-  const serial = require(`./src/utils/serial${isPi ? '' : '.mock'}`);
   usbPort
     .on('add', (path) => {
       usbPath = path;
