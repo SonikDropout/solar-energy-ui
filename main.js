@@ -61,7 +61,7 @@ function listenRenderer() {
   ipcMain.on('serialCommand', (_, ...args) => serial.sendCommand(...args));
   ipcMain.on('usbStorageRequest', usbPort.init);
   ipcMain.on('initialDataRequest', (e) => (e.returnValue = initialData));
-  ipcMain.on('EjectUSB', usbPort.eject);
+  ipcMain.on('ejectUSB', usbPort.eject);
 }
 
 function launch() {
