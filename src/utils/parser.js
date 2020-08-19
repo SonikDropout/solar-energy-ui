@@ -1,7 +1,6 @@
 const {
   SEPARATORS,
-  IV_DATA,
-  STATE_DATA,
+  SERIAL_DATA,
   DATA_BYTE_LENGTH,
 } = require('../constants');
 
@@ -12,14 +11,11 @@ function validate(buffer) {
 
 module.exports = function parse(buf) {
   validate(buf);
-  const result = { iv: [], state: [] };
+  const result = [];
   let i = SEPARATORS.length;
-  for (let j = 0; j < IV_DATA.length; j++) {
-    result.iv.push(+(buf.readInt16BE(i) / 1000).toPrecision(4));
+  for (let j = 0; j < SERIAL_DATA.length; j++) {
+    result.push(+(buf.readInt16BE(i) / 1000).toPrecision(4));
     i += 2;
-  }
-  for (let j = 0; j < STATE_DATA.length; j++) {
-    result.state.push(buf[i++]);
   }
   return result;
 };
