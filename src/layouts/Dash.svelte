@@ -81,17 +81,17 @@
   </header>
   <main>
     <div class="short-label">U, В</div>
-    <div class="value">{$serialData.voltage}</div>
+    <div class="value">{$serialData.voltage.toFixed(3)}</div>
     <div class="short-label">I, A</div>
-    <div class="value">{$serialData.current}</div>
+    <div class="value">{$serialData.current.toFixed(3)}</div>
     <div class="short-label">P, Вт</div>
-    <div class="value">{$serialData.current * $serialData.voltage}</div>
+    <div class="value">{($serialData.current * $serialData.voltage).toFixed(3)}</div>
     <div class="short-label">
       I
       <sub>нагр.</sub>
       , А
     </div>
-    <div class="value">{$serialData.loadCurrent}</div>
+    <div class="value">{$serialData.loadCurrent.toFixed(3)}</div>
     <div class="chart">
       <canvas id="chart" height="160" />
     </div>
