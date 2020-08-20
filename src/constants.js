@@ -13,7 +13,7 @@ const SERIAL_DATA = ['voltage', 'loadCurrent', 'current'];
 const DATA_BYTE_LENGTH = SERIAL_DATA.length * 2 + SEPARATORS.length;
 
 const COMMANDS = {
-  getIVC: [4, 0],
+  getIVC: [54, 2],
 };
 
 module.exports = {

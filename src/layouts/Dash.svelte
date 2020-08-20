@@ -101,7 +101,7 @@
     </div>
   </main>
   <footer>
-    <Button on:click={toggleDrawing}>{isDrawing ? 'Стоп' : 'Старт'}</Button>
+    <Button on:click={toggleDrawing} disabled={isDrawing}>Снять ВАХ</Button>
     <SaveButton disabled={saveDisabled} />
   </footer>
 </div>
