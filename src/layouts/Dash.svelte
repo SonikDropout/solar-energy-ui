@@ -31,7 +31,7 @@
 
   function monitorData() {
     serialData.subscribe(data => {
-      if (data.loadCurrent) {
+      if (data.current) {
         if (!isActive) startDrawing();
         addPoint(data);
       } else if (isActive) isActive = false;
@@ -65,7 +65,7 @@
   }
 
   function addPoint(iv) {
-    const row = [timeStart++, iv.voltage, iv.loadCurrent];
+    const row = [timeStart++, iv.voltage, iv.current];
     rows.push(row);
     addToChart(row);
     sendToLogger(row);
