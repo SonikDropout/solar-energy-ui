@@ -8,7 +8,7 @@ const SEPARATORS = Buffer.alloc(4);
 SEPARATORS.writeUInt16BE(1573);
 SEPARATORS.writeUInt16BE(2605, 2);
 
-const SERIAL_DATA = ['voltage', 'current', 'loadCurrent'];
+const SERIAL_DATA = ['voltage', 'loadCurrent', 'current'];
 
 const DATA_BYTE_LENGTH = SERIAL_DATA.length * 2 + SEPARATORS.length;
 
