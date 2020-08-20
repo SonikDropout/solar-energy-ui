@@ -19,28 +19,37 @@
       configureChart([], { x: 'I, A', y: 'U, В' })
     );
     chart.options.onClick = chart.resetZoom;
+    monitorData();
   });
 
   let rows = [],
     saveDisabled = true,
-    isDrawing,
+    isActive,
     unsubscribeData,
     chart,
     timeStart = 0;
 
-  function toggleDrawing() {
-    if (isDrawing) {
-      unsubscribeData();
-    } else {
-      clearChart();
-      startLogging();
-      subscribeData();
-    }
-    isDrawing = !isDrawing;
+  function monitorData() {
+    serialData.subscribe(data => {
+      if (data.loadCurrent) {
+        if (!isActive) startDrawing();
+        addPoint(data);
+      } else if (isActive) isActive = false;
+    });
+  }
+
+  function startDrawing() {
+    isActive = true;
+    startLogging();
+    subscribeData();
+  }
+
+  function getIVC() {
+    ipcRenderer.send('serialCommand', COMMANDS.getIVC);
   }
 
   function startLogging() {
-    const headers = ['t, c', 'U,B', 'I, A'];
+    const headers = ['t, c', 'U, B', 'I, A'];
     saveDisabled = false;
     ipcRenderer.send('startLog', headers);
   }
@@ -52,13 +61,12 @@
   }
 
   function subscribeData() {
-    ipcRenderer.send('serialCommand', COMMANDS.getIVC);
     unsubscribeData = serialData.subscribe(addPoint);
   }
 
   function addPoint(iv) {
-    const row = [timeStart++, iv.voltage, iv.current];
-    row.push(row);
+    const row = [timeStart++, iv.voltage, iv.loadCurrent];
+    rows.push(row);
     addToChart(row);
     sendToLogger(row);
   }
@@ -101,7 +109,7 @@
     </div>
   </main>
   <footer>
-    <Button on:click={toggleDrawing} disabled={isDrawing}>Снять ВАХ</Button>
+    <Button on:click={getIVC} disabled={isActive}>Снять ВАХ</Button>
     <SaveButton disabled={saveDisabled} />
   </footer>
 </div>
