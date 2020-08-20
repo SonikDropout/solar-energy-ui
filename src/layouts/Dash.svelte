@@ -22,12 +22,45 @@
     monitorData();
   });
 
+  const chartOptions = [
+    {
+      label: 'I(U)',
+      value: 'IVC',
+      yLabel: 'U, B',
+      yName: 'voltage',
+    },
+    {
+      label: 'I(P)',
+      value: 'IWC',
+      yLabel: 'P, Bт',
+      yName: 'power',
+    },
+  ];
+
   let rows = [],
     saveDisabled = true,
     isActive,
     unsubscribeData,
     chart,
+    chartOption = chartOptions[0],
     timeStart = 0;
+
+  function changeAxes(e) {
+    if (chartOption.value !== e.target.value) {
+      chartOption = chartOptions.find(
+        option => option.value === e.target.value
+      );
+      redrawChart();
+    }
+  }
+
+  function redrawChart() {
+    chart.options.scales.yAxes[0].scaleLabel.labelString = chartOption.yLabel;
+    chart.data.datasets[0].data = rows
+      .map(getPointFromRow)
+      .sort((p1, p2) => p1.x - p2.x);
+    chart.update();
+  }
 
   function monitorData() {
     serialData.subscribe(data => {
@@ -49,7 +82,7 @@
   }
 
   function startLogging() {
-    const headers = ['t, c', 'U, B', 'I, A'];
+    const headers = ['t, s', 'U, V', 'I, A', 'P, W'];
     saveDisabled = false;
     ipcRenderer.send('startLog', headers);
   }
@@ -65,22 +98,33 @@
   }
 
   function addPoint(iv) {
-    const row = [timeStart++, iv.voltage, iv.current];
+    const row = {
+      seconds: timeStart++,
+      voltage: iv.voltage,
+      current: iv.current,
+      power: iv.voltage * iv.current,
+    };
     rows.push(row);
     addToChart(row);
     sendToLogger(row);
   }
 
   function addToChart(row) {
-    chart.data.datasets[0].data.push({ x: row[2], y: row[1] });
+    chart.data.datasets[0].data.push(getPointFromRow(row));
     chart.data.datasets[0].data.sort((p1, p2) => p1.x - p2.x);
     chart.update();
   }
 
   function sendToLogger(row) {
-    let i = 3;
-    while (--i) row[i] = row[i].toFixed(3);
-    ipcRenderer.send('logRow', row);
+    ipcRenderer.send('logRow', formatLogRow(row));
+  }
+
+  function getPointFromRow(row) {
+    return { x: row.current, y: row[chartOption.yName] };
+  }
+
+  function formatLogRow(row) {
+    return Object.values(row).map(((v, i) => i > 0 ? v.toFixed(3) : v));
   }
 </script>
 
@@ -90,6 +134,13 @@
     Изучение технических характеристик солнечных панелей различного типа
   </header>
   <main>
+
+    <div class="short-label">Тип графика:</div>
+    <RadioGroup
+      name="chartAxes"
+      options={chartOptions}
+      onChange={changeAxes}
+      value={chartOption.value} />
     <div class="short-label">U, В</div>
     <div class="value">{$serialData.voltage.toFixed(3)}</div>
     <div class="short-label">I, A</div>
@@ -126,7 +177,7 @@
     grid-row-gap: 8px;
     align-items: center;
     padding: 0 24px;
-    font-size: 2rem;
+    font-size: 1.8rem;
   }
   .chart {
     grid-area: 1 / 3 / 11 / 13;
