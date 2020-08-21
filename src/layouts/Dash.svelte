@@ -19,7 +19,6 @@
       configureChart([], { x: 'I, A', y: 'U, В' })
     );
     chart.options.onClick = chart.resetZoom;
-    monitorData();
   });
 
   const chartOptions = [
@@ -43,6 +42,7 @@
     chart,
     IVCBtn,
     chartOption = chartOptions[0],
+    unsubscribeData,
     timeStart = 0;
 
   function changeAxes(e) {
@@ -63,12 +63,13 @@
   }
 
   function monitorData() {
-    serialData.subscribe(data => {
+    unsubscribeData = serialData.subscribe(data => {
       if (data.current) {
         if (!isActive) startDrawing();
         addPoint(data);
       } else if (isActive) {
         isActive = false;
+        unsubscribeData();
       }
     });
   }
@@ -82,6 +83,7 @@
   function getIVC(e) {
     ipcRenderer.send('serialCommand', COMMANDS.getIVC);
     e.target.disabled = true;
+    monitorData();
   }
 
   function startLogging() {
