@@ -11,10 +11,11 @@ serial.on('data', handleData);
 let buffer = Buffer.from([]);
 
 function handleData(buf) {
-  if (buf.toString('ascii').startsWith('ok')) buf = buf.slice(2);
   idx = buf.indexOf(SEPARATORS);
   if (idx != -1) {
     buffer = Buffer.concat([buffer, buf.slice(0, idx)]);
+    if (buffer.toString().endsWith('ok'))
+      buffer = buffer.slice(0, buffer.length - 2);
     try {
       emitter.emit('data', parse(buffer));
     } catch (e) {
@@ -26,35 +27,8 @@ function handleData(buf) {
   }
 }
 
-let commandQueue = [];
-let portBusy = false;
-
 function sendCommand([byte1, byte2]) {
-  commandQueue.push(Buffer.from([33, byte1, byte2, byte1 + byte2 + 33]));
-  if (!portBusy) {
-    portBusy = true;
-    writeCommandFromQueue();
-  }
-}
-
-let failedAttempts = 0;
-
-function writeCommandFromQueue() {
-  if (!commandQueue.length) {
-    portBusy = false;
-    return;
-  }
-  const cmd = commandQueue.shift();
-  console.log('Sending command to serial:', cmd);
-  serial.write(cmd);
-  serial.once('data', (buf) => {
-    console.log('Recieved answer:', buf);
-    if (!buf.toString('ascii').startsWith('ok') && failedAttempts < 2) {
-      commandQueue.unshift(cmd);
-      failedAttempts++;
-    } else failedAttempts = 0;
-    writeCommandFromQueue();
-  });
+  serial.write(Buffer.from([33, byte1, byte2, 33 + byte1 + byte2]));
 }
 
 emitter.sendCommand = sendCommand;

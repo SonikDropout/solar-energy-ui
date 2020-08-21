@@ -16,7 +16,9 @@ function randomizeData() {
   elapsed = ((Date.now() - timeStart) / 1000);
   if (elapsed > 5 && elapsed < 10) {
     serialData[2] = Math.random() * 10;
+    serialData[3] = 1;
   } else if (elapsed > 10) {
+    serialData[3] = 0;
     serialData[2] = 0;
     timeStart = Date.now();
   }

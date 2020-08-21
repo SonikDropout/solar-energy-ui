@@ -82,7 +82,6 @@
 
   function getIVC(e) {
     ipcRenderer.send('serialCommand', COMMANDS.getIVC);
-    e.target.disabled = true;
     monitorData();
   }
 
