@@ -40,8 +40,8 @@
   let rows = [],
     saveDisabled = true,
     isActive,
-    unsubscribeData,
     chart,
+    IVCBtn,
     chartOption = chartOptions[0],
     timeStart = 0;
 
@@ -67,18 +67,21 @@
       if (data.current) {
         if (!isActive) startDrawing();
         addPoint(data);
-      } else if (isActive) isActive = false;
+      } else if (isActive) {
+        isActive = false;
+      }
     });
   }
 
   function startDrawing() {
     isActive = true;
+    clearChart();
     startLogging();
-    subscribeData();
   }
 
-  function getIVC() {
+  function getIVC(e) {
     ipcRenderer.send('serialCommand', COMMANDS.getIVC);
+    e.target.disabled = true;
   }
 
   function startLogging() {
@@ -91,10 +94,6 @@
     timeStart = 0;
     rows = [];
     chart.data.datasets[0].data = [];
-  }
-
-  function subscribeData() {
-    unsubscribeData = serialData.subscribe(addPoint);
   }
 
   function addPoint(iv) {
@@ -124,7 +123,7 @@
   }
 
   function formatLogRow(row) {
-    return Object.values(row).map(((v, i) => i > 0 ? v.toFixed(3) : v));
+    return Object.values(row).map((v, i) => (i > 0 ? v.toFixed(3) : v));
   }
 </script>
 
