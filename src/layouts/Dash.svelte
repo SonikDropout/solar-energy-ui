@@ -64,7 +64,7 @@
 
   function monitorData() {
     unsubscribeData = serialData.subscribe(data => {
-      if (data.current) {
+      if (data.isGettingCharacteristic) {
         if (!isActive) startDrawing();
         addPoint(data);
       } else if (isActive) {
