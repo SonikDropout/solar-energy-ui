@@ -12,6 +12,10 @@
   import { serialData } from '../stores';
   import { CONNECTION_TYPES, COMMANDS } from '../constants';
   import Version from '../atoms/Version';
+  import UpdateModal from './organisms/UpdateModal';
+  let updateAvailable = ipcRenderer.sendSync('checkUpdate');
+
+  ipcRenderer.on('updateAvailable', () => (updateAvailable = true));
 
   onMount(() => {
     chart = new Chart(
@@ -129,7 +133,12 @@
 </script>
 
 <div class="layout">
+
+  {#if updateAvailable}
+    <UpdateModal />
+  {/if}
   <Version />
+  
   <header>
     Изучение технических характеристик солнечных панелей различного типа
   </header>
@@ -160,7 +169,7 @@
     </div>
   </main>
   <footer>
-    <Button on:click={getIVC} disabled={isActive}>Снять ВАХ</Button>
+    <Button on:click={getIVC} disabled={isActive}>Снять характеристики</Button>
     <SaveButton disabled={saveDisabled} />
   </footer>
 </div>

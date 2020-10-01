@@ -5,9 +5,11 @@ const logger = require('./src/utils/logger');
 const usbPort = require('./src/utils/usbPort');
 const { IS_RPI: isPi, SERIAL_DATA } = require('./src/constants');
 const { app, BrowserWindow, ipcMain } = electron;
+const checkUpdate = require('./src/utils/updater');
 const serial = require(`./src/utils/serial${isPi ? '' : '.mock'}`);
 
 let win,
+  updateAvailable,
   usbPath,
   initialData = Array(SERIAL_DATA.length).fill(0);
 
@@ -44,12 +46,22 @@ function initPeripherals(win) {
     .on('data', (d) => win.webContents.send('serialData', d))
     .once('data', (d) => (initialData = d));
   listenRenderer();
+  initUpdater();
   return {
     removeAllListeners() {
       usbPort.removeAllListeners();
       serial.close();
     },
   };
+}
+
+
+function initUpdater() {
+  checkUpdate().then((isUpdatable) => {
+    if (isUpdatable) win.webContents.send('updateAvailable');
+    updateAvailable = isUpdatable;
+  });
+  ipcMain.on('checkUpdate', (e) => (e.returnValue = updateAvailable));
 }
 
 function listenRenderer() {
