@@ -12,7 +12,7 @@
   import { serialData } from '../stores';
   import { CONNECTION_TYPES, COMMANDS } from '../constants';
   import Version from '../atoms/Version';
-  import UpdateModal from './organisms/UpdateModal';
+  import UpdateModal from '../organisms/UpdateModal';
   let updateAvailable = ipcRenderer.sendSync('checkUpdate');
 
   ipcRenderer.on('updateAvailable', () => (updateAvailable = true));
@@ -138,7 +138,7 @@
     <UpdateModal />
   {/if}
   <Version />
-  
+
   <header>
     Изучение технических характеристик солнечных панелей различного типа
   </header>
