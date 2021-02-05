@@ -13,6 +13,7 @@
   import { CONNECTION_TYPES, COMMANDS } from '../constants';
   import Version from '../atoms/Version';
   import UpdateModal from '../organisms/UpdateModal';
+  import {__} from '../utils/translations';
   let updateAvailable = ipcRenderer.sendSync('checkUpdate');
 
   ipcRenderer.on('updateAvailable', () => (updateAvailable = true));
@@ -20,7 +21,7 @@
   onMount(() => {
     chart = new Chart(
       document.getElementById('chart').getContext('2d'),
-      configureChart([], { x: 'I, A', y: 'U, В' })
+      configureChart([], { x: 'I, A', y: 'U, V' })
     );
     chart.options.onClick = chart.resetZoom;
   });
@@ -29,13 +30,13 @@
     {
       label: 'I(U)',
       value: 'IVC',
-      yLabel: 'U, B',
+      yLabel: 'U, V',
       yName: 'voltage',
     },
     {
       label: 'I(P)',
       value: 'IWC',
-      yLabel: 'P, Bт',
+      yLabel: 'P, W',
       yName: 'power',
     },
   ];
@@ -140,28 +141,27 @@
   <Version />
 
   <header>
-    Изучение технических характеристик солнечных панелей различного типа
+    {$__('solar panels study')}
   </header>
   <main>
-
-    <div class="short-label">Тип графика:</div>
+    <div class="short-label">{$__('chart type')}</div>
     <RadioGroup
       name="chartAxes"
       options={chartOptions}
       onChange={changeAxes}
       value={chartOption.value} />
-    <div class="short-label">U, В</div>
+    <div class="short-label">U, {$__('V')}</div>
     <div class="value">{$serialData.voltage.toFixed(3)}</div>
-    <div class="short-label">I, A</div>
+    <div class="short-label">I, {$__('A')}</div>
     <div class="value">{$serialData.current.toFixed(3)}</div>
-    <div class="short-label">P, Вт</div>
+    <div class="short-label">P, {$__('W')}</div>
     <div class="value">
       {($serialData.current * $serialData.voltage).toFixed(3)}
     </div>
     <div class="short-label">
       I
-      <sub>нагр.</sub>
-      , А
+      <sub>{$__('load')}</sub>
+      , {$__('A')}
     </div>
     <div class="value">{$serialData.loadCurrent.toFixed(3)}</div>
     <div class="chart">
@@ -169,7 +169,7 @@
     </div>
   </main>
   <footer>
-    <Button on:click={getIVC} disabled={isActive}>Снять характеристики</Button>
+    <Button on:click={getIVC} disabled={isActive}>{$__('get characteristics')}</Button>
     <SaveButton disabled={saveDisabled} />
   </footer>
 </div>
